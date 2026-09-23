@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSnackbar } from 'notistack';
 import { useParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -23,6 +24,7 @@ export default function DriverDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state, dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
   
   const driver = state.drivers.find(d => d.id === id);
   const [isEditing, setIsEditing] = useState(false);
@@ -45,8 +47,9 @@ export default function DriverDetailPage() {
       const action = updateDriver({ ...driver, ...data }, state);
       dispatch(action);
       setIsEditing(false);
+      enqueueSnackbar('Driver updated', { variant: 'success' });
     } catch (err) {
-      console.error(err);
+      enqueueSnackbar(err.message || 'Failed to update driver', { variant: 'error' });
     }
   };
 

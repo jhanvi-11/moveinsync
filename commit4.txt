@@ -1,0 +1,8 @@
+feat(dashboard): role-aware KPIs, alerts, recent activity with skeletons
+
+- Role-aware KPIs: fleet, drivers, documents, pending verifications
+- Recent activity widget pulling from auditLog
+- Alerts panel: top expired/expiring items needing action
+- Hero strip with teal gradient per visual identity spec
+- Skeletons during async hydration
+- Tests: KPI computation per scope, skeleton rendering, report aggregation

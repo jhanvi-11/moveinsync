@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSnackbar } from 'notistack';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -16,6 +17,7 @@ import { PermissionGate } from '../rbac/PermissionGate';
 export default function AssignVehicleDialog({ driver, vehicles, open, onClose }) {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const { dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
 
   // If driver already has an assigned vehicle, default to it
   React.useEffect(() => {
@@ -33,11 +35,13 @@ export default function AssignVehicleDialog({ driver, vehicles, open, onClose })
     if (!selectedVehicle) return;
     dispatch(assignVehicle(driver.id, selectedVehicle.id));
     onClose();
+    enqueueSnackbar(`Vehicle assigned to ${driver.firstName}`, { variant: 'success' });
   };
 
   const handleUnassign = () => {
     dispatch(assignVehicle(driver.id, null));
     onClose();
+    enqueueSnackbar('Vehicle unassigned', { variant: 'info' });
   };
 
   // Check if selected vehicle is already assigned to someone else

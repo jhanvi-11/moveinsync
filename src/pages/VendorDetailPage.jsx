@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSnackbar } from 'notistack';
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -24,6 +25,7 @@ function TabPanel({ children, value, index }) {
 export default function VendorDetailPage() {
   const { id } = useParams();
   const { state, dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
   const [tab, setTab] = useState(0);
 
   const vendor = state.vendors.find(v => v.id === id);
@@ -37,8 +39,9 @@ export default function VendorDetailPage() {
       const newStatus = vendor.status === 'active' ? 'disabled' : 'active';
       const updated = updateVendor(id, { status: newStatus }, state);
       dispatch({ type: 'UPDATE_VENDOR', payload: updated });
+      enqueueSnackbar(`Vendor ${newStatus === 'active' ? 'enabled' : 'disabled'}`, { variant: newStatus === 'active' ? 'success' : 'warning' });
     } catch (e) {
-      alert(e.message);
+      enqueueSnackbar(e.message, { variant: 'error' });
     }
   };
 

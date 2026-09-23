@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSnackbar } from 'notistack';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -19,6 +20,7 @@ import useVendorDescendants from '../hooks/useVendorDescendants';
 export default function DriversPage({ vendorId = null }) {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [isCreating, setIsCreating] = useState(false);
   const { currentVendorId } = state;
   const targetVendorId = vendorId || currentVendorId;
@@ -75,9 +77,9 @@ export default function DriversPage({ vendorId = null }) {
       const action = createDriver({ ...data, vendorId: targetVendorId }, state);
       dispatch(action);
       setIsCreating(false);
+      enqueueSnackbar('Driver added successfully', { variant: 'success' });
     } catch (err) {
-      // Handled by local form state normally, but just in case
-      console.error(err);
+      enqueueSnackbar(err.message || 'Failed to add driver', { variant: 'error' });
     }
   };
 

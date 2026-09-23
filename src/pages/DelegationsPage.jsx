@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useSnackbar } from 'notistack';
 import { Box, Typography, Button, Tabs, Tab, Chip, IconButton } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import { useApp } from '../state/AppContext';
@@ -9,6 +10,7 @@ import { useVendorDescendants } from '../hooks/useVendorDescendants';
 
 export default function DelegationsPage() {
   const { state, dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
   const [tab, setTab] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const descendants = useVendorDescendants(state.currentVendorId);
@@ -23,6 +25,9 @@ export default function DelegationsPage() {
     const res = revokeDelegation(id, state);
     if (res.success) {
       res.actions.forEach(dispatch);
+      enqueueSnackbar('Delegation revoked', { variant: 'info' });
+    } else {
+      enqueueSnackbar(res.error || 'Failed to revoke delegation', { variant: 'error' });
     }
   };
 

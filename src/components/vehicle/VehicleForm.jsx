@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSnackbar } from 'notistack';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -13,6 +14,7 @@ import MenuItem from '@mui/material/MenuItem';
 
 export default function VehicleForm({ open, onClose, vehicle = null }) {
   const { state, dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
   const [formData, setFormData] = useState(
     vehicle || {
       registrationNumber: '',
@@ -42,9 +44,11 @@ export default function VehicleForm({ open, onClose, vehicle = null }) {
       if (vehicle) {
         const updated = updateVehicle(vehicle.id, data, state);
         dispatch({ type: 'UPDATE_VEHICLE', payload: updated });
+        enqueueSnackbar('Vehicle updated', { variant: 'success' });
       } else {
         const created = createVehicle(data, state);
         dispatch({ type: 'CREATE_VEHICLE', payload: created });
+        enqueueSnackbar(`Vehicle "${created.registrationNumber}" added`, { variant: 'success' });
       }
       onClose();
     } catch (e) {

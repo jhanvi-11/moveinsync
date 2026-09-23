@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useSnackbar } from 'notistack';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -24,6 +25,7 @@ import { PAGE_SIZE } from '../utils/constants';
 export default function VendorsPage() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -39,8 +41,9 @@ export default function VendorsPage() {
       dispatch({ type: 'ADD_VENDOR', payload: newVendor });
       setIsCreating(false);
       setSelectedId(newVendor.id);
+      enqueueSnackbar(`Vendor "${newVendor.name}" created`, { variant: 'success' });
     } catch (e) {
-      alert(e.message);
+      enqueueSnackbar(e.message, { variant: 'error' });
     }
   };
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSnackbar } from 'notistack';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -6,7 +7,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
-import BlockIcon from '@mui/material/Block';
+import BlockIcon from '@mui/icons-material/Block';
 import Tooltip from '@mui/material/Tooltip';
 import { useApp } from '../../state/AppContext';
 import { disableVehicle } from '../../services/vehicles.service';
@@ -17,12 +18,14 @@ export default function DisableVehicleDialog({ vehicle }) {
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const { state, dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleDisable = () => {
     try {
       const updated = disableVehicle(vehicle.id, reason, state);
       dispatch({ type: 'DISABLE_VEHICLE', payload: { id: vehicle.id, reason } });
       setOpen(false);
+      enqueueSnackbar(`Vehicle ${vehicle.registrationNumber} disabled`, { variant: 'warning' });
     } catch (e) {
       setError(e.message);
     }

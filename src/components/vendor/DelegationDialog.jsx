@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSnackbar } from 'notistack';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
   Button, TextField, FormControlLabel, Checkbox, 
@@ -10,6 +11,7 @@ import { grantDelegation } from '../../services/delegations.service';
 
 export default function DelegationDialog({ open, onClose }) {
   const { state, dispatch } = useApp();
+  const { enqueueSnackbar } = useSnackbar();
   const descendants = useVendorDescendants(state.currentVendorId);
   const [toVendorId, setToVendorId] = useState('');
   const [permissions, setPermissions] = useState({
@@ -45,6 +47,7 @@ export default function DelegationDialog({ open, onClose }) {
       setScope('all');
       setNotes('');
       onClose();
+      enqueueSnackbar('Delegation granted successfully', { variant: 'success' });
     } else {
       setError(res.error);
     }
