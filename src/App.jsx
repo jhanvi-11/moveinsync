@@ -1,43 +1,41 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
+import { BrowserRouter, useRoutes } from 'react-router-dom';
+import { ErrorBoundary } from './routes/ErrorBoundary';
+import { SkeletonBlock } from './components/common/SkeletonBlock';
+import { routes } from './routes/routes';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useApp } from './state/AppContext';
+import { useSnackbar } from 'notistack';
+
+const PageSkeleton = () => (
+  <Box sx={{ p: 3 }}>
+    <SkeletonBlock height={40} width={200} />
+    <Box sx={{ mt: 3 }}><SkeletonBlock height={300} /></Box>
+  </Box>
+);
+
+const AppRoutes = () => {
+  return useRoutes(routes);
+};
 
 function App() {
-  const { state } = useApp();
-  
+  const { enqueueSnackbar } = useSnackbar();
+
   useEffect(() => {
-    console.log('Seed State Loaded:', state);
-  }, [state]);
+    const handleQuotaError = () => {
+      enqueueSnackbar('Storage quota exceeded. Some changes may not be saved.', { variant: 'error' });
+    };
+    window.addEventListener('storage-quota-exceeded', handleQuotaError);
+    return () => window.removeEventListener('storage-quota-exceeded', handleQuotaError);
+  }, [enqueueSnackbar]);
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-      }}
-    >
-      <Box 
-        sx={{ 
-          p: 6, 
-          bgcolor: 'background.paper', 
-          borderRadius: 2, 
-          boxShadow: 3,
-          textAlign: 'center',
-          borderTop: '8px solid',
-          borderTopColor: 'primary.main',
-        }}
-      >
-        <Typography variant="h3" component="h1" gutterBottom color="primary.main">
-          MoveInSync Vendor Hub
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Welcome to the multi-level vendor management system.
-        </Typography>
-      </Box>
-    </Box>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Suspense fallback={<PageSkeleton />}>
+          <AppRoutes />
+        </Suspense>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

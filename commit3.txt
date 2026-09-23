@@ -1,0 +1,11 @@
+feat(shell): responsive app shell, mock auth, permission-aware routing
+
+- Responsive AppShell: permanent drawer on md+, temporary on xs/sm
+- TopBar with RoleSwitcher (MUI Autocomplete, full ARIA combobox)
+- PermissionGate and ProtectedRoute components with tested behavior
+- Global ErrorBoundary + per-route Suspense/PageSkeleton
+- Common components: StatusChip, EmptyState, SkeletonBlock, ConfirmDialog, KpiCard
+- LoginPage with mock vendor picker
+- Placeholder pages for every route wired into App.jsx
+- Notistack provider for toasts (quota error wired)
+- Tests: ProtectedRoute, PermissionGate, RoleSwitcher keyboard nav

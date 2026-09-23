@@ -7,14 +7,17 @@ import '@fontsource/jetbrains-mono';
 import App from './App.jsx';
 import { theme } from './theme';
 import { AppProvider } from './state/AppContext';
+import { SnackbarProvider } from 'notistack';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppProvider>
-        <App />
-      </AppProvider>
+      <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+        <AppProvider>
+          <App />
+        </AppProvider>
+      </SnackbarProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

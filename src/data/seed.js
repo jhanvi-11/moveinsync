@@ -164,7 +164,7 @@ export function getSeedState() {
 
   return {
     schemaVersion: 1,
-    currentVendorId: superVendor.id,
+    currentVendorId: null,
     vendors,
     delegations,
     vehicles,

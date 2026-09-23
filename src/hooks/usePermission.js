@@ -6,8 +6,9 @@ export const usePermission = (action, targetVendorId) => {
   const { state } = useApp();
   
   const isAllowed = useMemo(() => {
-    if (!targetVendorId) return false;
-    return can(action, targetVendorId, state.currentVendorId, state);
+    const target = targetVendorId || state.currentVendorId;
+    if (!target) return false;
+    return can(action, target, state.currentVendorId, state);
   }, [action, targetVendorId, state.currentVendorId, state.vendors, state.delegations]);
 
   const scope = useMemo(() => {

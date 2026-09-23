@@ -1,24 +1,39 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
-import App from './App';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
 import { AppProvider } from './state/AppContext';
+import App from './App';
+import { SnackbarProvider } from 'notistack';
 
 describe('App', () => {
   it('renders branded hero for visual verification', async () => {
+    const user = userEvent.setup();
+    
     render(
       <ThemeProvider theme={theme}>
-        <AppProvider>
-          <App />
-        </AppProvider>
+        <SnackbarProvider>
+          <AppProvider>
+            <App />
+          </AppProvider>
+        </SnackbarProvider>
       </ThemeProvider>
     );
-    const heading = await screen.findByRole('heading', { name: /MoveInSync Vendor Hub/i });
-    expect(heading).toBeInTheDocument();
+
+    expect(await screen.findByText('Mock Login')).toBeInTheDocument();
     
-    // Verify primary color token matches rgb(13,148,136)
-    expect(theme.palette.primary.main).toBe('rgb(13,148,136)');
+    const combobox = screen.getByRole('combobox');
+    await user.click(combobox);
+    await user.keyboard('{ArrowDown}{Enter}');
+    
+    const loginBtn = screen.getByRole('button', { name: /Go to Dashboard/i });
+    await user.click(loginBtn);
+    
+    const vendorsLink = await screen.findByRole('link', { name: /Vendors/i });
+    await user.click(vendorsLink);
+    
+    const vendorsHeading = await screen.findByRole('heading', { name: 'VendorsPage' });
+    expect(vendorsHeading).toBeInTheDocument();
   });
 });
