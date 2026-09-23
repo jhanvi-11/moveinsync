@@ -1,0 +1,8 @@
+chore(bootstrap): scaffold Vite + React with MUI theme, code-splitting, and dev tooling
+
+- React + Vite (JS) project scaffold
+- MUI v5 with custom teal/amber palette and Inter/JetBrains Mono typography
+- Vite manualChunks split (react-vendor / mui / app)
+- ESLint + Prettier + Vitest configured
+- App shell renders branded hero for visual verification
+- vercel.json + netlify.toml for later deployment
