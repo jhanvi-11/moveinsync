@@ -23,6 +23,9 @@ export const getDescendants = (vendorId, vendors) => {
 
 export const isAnyAncestorDisabled = (vendorId, vendors) => {
   const chain = getAncestorChain(vendorId, vendors);
+  if (chain.length > 0 && chain[0].id === vendorId) {
+    chain.shift();
+  }
   return chain.some(vendor => vendor.status === 'disabled' || vendor.status === 'suspended');
 };
 

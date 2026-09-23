@@ -33,7 +33,7 @@ describe('App', () => {
     const vendorsLink = await screen.findByRole('link', { name: /Vendors/i });
     await user.click(vendorsLink);
     
-    const vendorsHeading = await screen.findByRole('heading', { name: 'VendorsPage' });
+    const vendorsHeading = await screen.findByRole('heading', { name: /Vendors/i });
     expect(vendorsHeading).toBeInTheDocument();
   });
 });
