@@ -42,3 +42,46 @@ export const validateVehicle = (vehicle, existingVehicles) => {
 
   return Object.keys(errors).length ? errors : null;
 };
+
+export const validateDriver = (driver, existingDrivers) => {
+  const errors = {};
+
+  if (!driver.firstName || driver.firstName.trim().length < 2) {
+    errors.firstName = 'First name must be at least 2 characters';
+  }
+  
+  if (!driver.lastName || driver.lastName.trim().length < 2) {
+    errors.lastName = 'Last name must be at least 2 characters';
+  }
+
+  if (!driver.licenseNumber || !/^[A-Z]{2}\d{13}$/.test(driver.licenseNumber)) {
+    errors.licenseNumber = 'Invalid license format (e.g. KA0120230000000)';
+  } else if (existingDrivers.some(d => d.licenseNumber === driver.licenseNumber && d.id !== driver.id)) {
+    errors.licenseNumber = 'License number must be unique';
+  }
+
+  if (driver.phone && !/^(?:\+91|91)?[6789]\d{9}$/.test(driver.phone)) {
+    errors.phone = 'Invalid Indian phone number';
+  }
+
+  if (driver.dateOfBirth) {
+    const dob = new Date(driver.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      errors.dateOfBirth = 'Driver must be at least 18 years old';
+    }
+  } else {
+    errors.dateOfBirth = 'Date of birth is required';
+  }
+
+  if (!driver.licenseExpiry) {
+    errors.licenseExpiry = 'License expiry is required';
+  }
+
+  return Object.keys(errors).length ? errors : null;
+};

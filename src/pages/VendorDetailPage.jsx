@@ -10,6 +10,8 @@ import { ParentDisabledBanner } from '../components/vendor/ParentDisabledBanner'
 import { updateVendor } from '../services/vendors.service';
 import { usePermission } from '../hooks/usePermission';
 import { isWriteAllowed } from '../utils/cascade';
+import FleetPage from './FleetPage';
+import DriversPage from './DriversPage';
 
 function TabPanel({ children, value, index }) {
   return (
@@ -73,10 +75,10 @@ export default function VendorDetailPage() {
         <Typography>Overview content for {vendor.name}</Typography>
       </TabPanel>
       <TabPanel value={tab} index={1}>
-        <Typography>Fleet Placeholder</Typography>
+        <FleetPage vendorId={id} />
       </TabPanel>
       <TabPanel value={tab} index={2}>
-        <Typography>Drivers Placeholder</Typography>
+        <DriversPage vendorId={id} />
       </TabPanel>
       <TabPanel value={tab} index={3}>
         <Typography>Documents Placeholder</Typography>
