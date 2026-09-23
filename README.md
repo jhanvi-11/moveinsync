@@ -1,192 +1,291 @@
 # MoveInSync Vendor Hub
 
-> Multi-tier vendor management platform with hierarchical RBAC, delegation controls, fleet & driver onboarding, and document compliance tracking.
+MoveInSync Vendor Hub is a browser-based vendor, fleet, driver, document, and delegation management demo for a four-level vendor hierarchy.
 
+The application models scoped access across Super, Regional, City, and Local vendors. It ships as a Vite single-page React application with deterministic seed data and debounced `localStorage` persistence. There is currently no server, database, external API, or real authentication provider.
 
----
+## Overview
 
-## Quick Start
+The project demonstrates how a transport operations platform can provide a shared operational view while keeping data and actions scoped to the currently selected vendor. Users select a vendor role from the mock login screen, then work within a responsive Material UI shell.
 
-```bash
-# Clone and install
-git clone https://github.com/jhanvi-11/moveinsync.git
-cd moveinsync
-npm install
+The main workflow is:
 
-# Development server (http://localhost:5173)
-npm run dev
+1. Select a seeded vendor from the mock login screen.
+2. Review role-scoped dashboard KPIs, document alerts, and recent activity.
+3. Navigate to the areas permitted for that vendor.
+4. Create and manage vendors, vehicles, drivers, and documents where the current role allows writes.
+5. Grant or revoke delegated permissions for descendant vendors.
+6. Switch vendor context to verify hierarchy scope, disabled-parent write blocking, and delegation resolution.
 
-# Run tests
-npm run test
+## Features
 
-# Production build
-npm run build
-npm run preview
-```
-
-**Requirements:** Node ≥ 18, npm ≥ 9
-
----
-
-## Demo Walkthrough
-
-Follow these steps to explore every major feature on the live demo (or locally):
-
-### 1. Login & Dashboard
-Open the app. You land on the **Dashboard** as the super-vendor *MoveInSync Global*. Note the four KPI cards (Fleet, Drivers, Documents, Verifications) and the Alerts / Recent Activity panels.
-
-### 2. Role Switcher — Experience the Hierarchy
-Click the **vendor dropdown** (top-right) and switch to *Regional Vendor 1*. The dashboard KPIs update to show only data scoped to that vendor and its descendants. Switch to *City Vendor 1* or *Local Vendor 1* to see increasingly narrower scopes. Notice how sidebar navigation items stay or hide based on each vendor's role-based permissions.
-
-### 3. Vendor Hierarchy
-Navigate to **Vendors** (sidebar). The left panel shows the full vendor tree. Click a node to highlight it; the right table filters to show matching vendors. Click any vendor row to open its detail page.
-
-### 4. Vendor Enable / Disable (Cascading Rule)
-From a vendor detail page, click **Disable Vendor**. A toast confirms the action. Now switch role to a *child* of that vendor — you'll see a **"Parent Disabled" banner** and write operations are blocked for that subtree. Re-enable the parent to restore access.
-
-### 5. Fleet Management
-Navigate to **Fleet** (sidebar). Browse the paginated, sortable vehicle table. Click **Add Vehicle** to create one — a success toast appears. Click the 🚫 icon on any active vehicle to disable it with a reason.
-
-### 6. Driver Management
-Navigate to **Drivers** (sidebar). Click **Add Driver** to create a driver record. Click any driver row to open the **Driver Detail** page.
-
-### 7. Vehicle Assignment
-On a Driver Detail page, click **Assign Vehicle** to open the vehicle assignment dialog. Select a vehicle and assign it. If the vehicle is already assigned to another driver, a warning shows that it will be reassigned.
-
-### 8. Document Center
-Navigate to **Documents** (sidebar). Use the filter bar to filter by document type, status, or vendor. Documents nearing expiry (≤ 30 days) are flagged as warnings; expired documents show as errors.
-
-### 9. Delegations — Grant & Revoke
-Switch role back to *MoveInSync Global*. Navigate to **Delegations** (sidebar). Click **New Delegation**, pick a descendant vendor, check permission boxes (Fleet Onboarding, Driver Onboarding, etc.), select scope, and click **Grant Delegation**. The outbound tab updates. Click the revoke (🚫) icon to revoke a delegation — notice the info toast and the record moving to the History tab.
-
-### 10. Delegation Conflict Rule in Action
-The seed data demonstrates this: *MoveInSync Global* grants `payments` to *Regional Vendor 1* (active). Then *Regional Vendor 1* **revokes** `payments` from *City Vendor 1*. Switch role to *City Vendor 1* — the `payments` permission is blocked because the narrower revocation at the closer ancestor takes precedence over the broader grant at the root.
-
----
-
-## Architecture
-
-### Service-Layer Seam — Ready for REST
-
-All data operations live in **`src/services/*.service.js`** modules:
-
-| Service | Purpose |
-|---|---|
-| `vendors.service.js` | Create / update vendors |
-| `vehicles.service.js` | Create / update / disable vehicles |
-| `drivers.service.js` | Create / update drivers, assign vehicles |
-| `delegations.service.js` | Grant / revoke delegations |
-| `documents.service.js` | Document queries, expiry status |
-| `reports.service.js` | Dashboard KPIs, alerts, activity |
-| `rbac.service.js` | Permission checks (`can`, `scopeOf`) |
-| `auditLog.service.js` | Audit log entries |
-| `storage.js` | LocalStorage persistence |
-
-Currently every service function reads from and writes to a React context backed by `localStorage`. To connect to a real backend, **replace each function body with a `fetch()` / `axios` call** — the function signatures and return shapes stay the same, so no component changes are needed. For example:
-
-```js
-// Before (localStorage)
-export const createVehicle = (data, state) => { ... return created; }
-
-// After (REST)
-export const createVehicle = async (data) => {
-  const res = await fetch('/api/vehicles', { method: 'POST', body: JSON.stringify(data) });
-  return res.json();
-};
-```
-
-### Delegation Conflict Rule
-
-Delegations use a **narrowest-ancestor-wins** resolution:
-
-1. When checking whether a vendor has a delegated permission (e.g. `payments`), the system walks the vendor's ancestor chain from the vendor itself toward the root.
-2. The **first** ancestor that has an active or revoked delegation for that permission determines the outcome.
-3. If that closest delegation is **revoked**, access is denied — even if a broader grant exists higher in the tree.
-
-**Example from seed data:**
-
-```
-MoveInSync Global  ──grants payments──▶  Regional Vendor 1   ✅
-Regional Vendor 1  ──revokes payments──▶  City Vendor 1       ❌
-```
-
-City Vendor 1 sees the revocation first (it's closer in the ancestor chain), so `payments` is blocked despite the global grant above it.
-
-### Cascading-Disabled Rule
-
-When a vendor is **disabled**:
-
-- All **descendant vendors** are blocked from write operations (create/update/delete for fleet, drivers, documents).
-- A **"Parent Disabled" banner** renders on every descendant's page.
-- The system walks the ancestor chain via `isAnyAncestorDisabled()` — if any ancestor is `disabled` or `suspended`, writes are blocked.
-- Vendors with `overrideActions` permission bypass this restriction.
-- Re-enabling the parent immediately restores write access to the entire subtree (no per-child re-enable needed).
-
----
-
-## Feature Matrix
-
-| # | Feature | Brief Criteria |
-|---|---|---|
-| 1 | **Multi-tier Vendor Hierarchy** | 4 levels (Super → Regional → City → Local); tree view + table |
-| 2 | **Role-based Access Control** | `can(action, target)` permission check; PermissionGate component |
-| 3 | **Role Switcher** | Top-bar vendor dropdown; instant context switch; scoped data |
-| 4 | **Dashboard KPIs** | Fleet / Drivers / Documents / Verifications cards with alerts |
-| 5 | **Fleet Management** | CRUD vehicles; disable with reason; sortable/searchable table |
-| 6 | **Driver Management** | CRUD drivers; detail page; assign/unassign vehicle |
-| 7 | **Document Center** | Filter by type/status/vendor; expiry tracking (expired/expiring/valid) |
-| 8 | **Delegation System** | Grant/revoke delegated permissions; outbound/inbound/history tabs |
-| 9 | **Delegation Conflict Resolution** | Narrowest-ancestor-wins; revocation overrides broader grant |
-| 10 | **Cascading Disable** | Disabled vendor blocks writes for entire subtree; banner shown |
-| 11 | **Audit Logging** | Actions recorded to audit log; recent activity on dashboard |
-| 12 | **Toast Notifications** | notistack-powered toasts on all CRUD actions (success/error/warning) |
-| 13 | **Lazy Loading** | Route-level code splitting with React.lazy + Suspense skeletons |
-| 14 | **Error Boundary** | Catches render errors; fallback UI prevents white-screen crashes |
-| 15 | **LocalStorage Persistence** | State survives page reload; quota-exceeded detection |
-| 16 | **Protected Routes** | Permission-gated routing; redirect to 403 on unauthorized access |
-
----
+- Four-level vendor hierarchy: `super`, `regional`, `city`, and `local`.
+- Role switching through the login screen and top-bar vendor selector.
+- Vendor tree, search, pagination, detail views, status changes, and parent-level validation.
+- Vehicle onboarding, duplicate-registration validation, searchable/sortable fleet table, disable-with-reason, and maintenance state.
+- Driver onboarding and validation, driver detail pages, and vehicle assignment or unassignment.
+- Document upload, verification/rejection actions, document type/status/vendor filters, and expiry classification.
+- Dashboard KPIs for vehicles, drivers, expiring/expired documents, and pending verifications.
+- Delegation grant, revoke, inbound, outbound, and history views.
+- Client-side permission gates and protected routes with vendor-descendant scoping.
+- Narrowest-ancestor delegation resolution, including revoked-delegation denial.
+- Disabled or suspended ancestor detection that blocks descendant writes in the UI.
+- Audit log entries for reducer mutations, capped at 200 entries.
+- Toast notifications through Notistack.
+- Lazy-loaded routes with a Suspense skeleton and a global error boundary.
+- Responsive navigation using Material UI's permanent desktop drawer and temporary mobile drawer.
+- Cross-tab state synchronization through the browser `storage` event.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | React 19 + Vite 8 |
-| UI Library | MUI (Material UI) v9 |
-| Routing | React Router v7 |
-| State | React Context + useReducer |
-| Toasts | notistack v3 |
-| Persistence | localStorage (service-layer swap for REST) |
-| Testing | Vitest + Testing Library |
-| Linting | OxLint |
-| Formatting | Prettier |
-| Deployment | Vercel |
+### Frontend
 
----
+- React 19
+- Vite 8
+- JavaScript with JSX
+- Material UI 9 and Emotion
+- React Router DOM 7
+- Inter and JetBrains Mono via `@fontsource`
+
+### State and persistence
+
+- React Context and `useReducer`
+- Browser `localStorage`
+- Versioned storage key: `mis:vendor-mgmt:v1`
+- Debounced writes and a custom storage-quota event
+
+### Authentication and authorization
+
+- Mock login implemented by selecting a vendor role
+- Client-side route protection with `ProtectedRoute`
+- Client-side inline authorization with `PermissionGate` and `usePermission`
+- Hierarchy and delegation rules in `src/services/rbac.service.js`
+
+### Testing and developer tools
+
+- Vitest 5
+- Testing Library for React, DOM assertions, and user events
+- JSDOM
+- OxLint
+- Prettier
+
+### Deployment
+
+- Vercel SPA rewrite in `vercel.json`
+- Netlify build and SPA fallback configuration in `netlify.toml`
+- Vite production chunking for React, MUI/Emotion, and application code
+
+### APIs, services, and database
+
+There are no HTTP API routes, external service integrations, backend services, or database drivers in the current repository. The modules in `src/services/` are local business-logic services that read state passed from React and return records or reducer actions.
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> Login[Mock Login / Role Selector]
+    Login --> Router[React Router]
+    Router --> Shell[AppShell and Protected Routes]
+    Shell --> Pages[Lazy-loaded Pages]
+    Pages --> Hooks[Permission and Descendant Hooks]
+    Pages --> Services[Local Service Modules]
+    Hooks --> Context[AppContext]
+    Services --> Reducer[useReducer]
+    Reducer --> Context
+    Context --> Storage[localStorage]
+    Storage --> Context
+    Context --> Seed[Deterministic Seed Data]
+```
+
+### Runtime data flow
+
+1. `AppProvider` asynchronously reads the versioned state from `localStorage`.
+2. If no compatible state exists, `getSeedState()` creates the vendor hierarchy and operational records.
+3. Pages read state through `useApp()` and derive vendor scope with `useVendorDescendants()`.
+4. Service modules validate input and return reducer actions or computed results.
+5. `appReducer` applies mutations and records an audit entry for state-changing actions.
+6. `AppContext` saves the updated state with a 300 ms debounce.
+
+## Application Routes
+
+| Path | Page | Access rule |
+| --- | --- | --- |
+| `/login` | Mock login | Public entry point |
+| `/` | Dashboard | Requires a selected vendor |
+| `/vendors` | Vendor hierarchy and list | `vendors.read` |
+| `/vendors/:id` | Vendor details and tabs | `vendors.read` |
+| `/fleet` | Fleet management | `fleet.read` |
+| `/drivers` | Driver management | `drivers.read` |
+| `/drivers/:id` | Driver details | `drivers.read` |
+| `/documents` | Document center | `documents.read` |
+| `/delegations` | Delegation management | `delegations.manage` |
+| `/reports` | Reports placeholder | `reports.read` |
+| `/settings` | Settings placeholder | Requires a selected vendor |
+| `/403` | Unauthorized page | Internal fallback |
+| `*` | Not-found page | Internal fallback |
+
+## Authorization Model
+
+Authorization is evaluated in the browser by `can(action, targetVendorId, currentVendorId, state)`.
+
+- Super and Regional vendors receive broad baseline access over their own scope and descendants.
+- City vendors can read vendors, manage fleet and drivers, read/upload documents, and read reports within scope.
+- Local vendors can manage fleet and drivers, read/upload documents, and read reports within scope.
+- The current vendor can target itself or descendants; unrelated branches are outside scope.
+- Route-level permissions hide unauthorized navigation and redirect denied routes to `/403`.
+- `PermissionGate` hides or replaces unauthorized action controls.
+
+### Delegation conflict rule
+
+Delegated permissions are resolved from the current vendor upward through its ancestor chain. The first matching delegation for a permission decides the result. A revoked matching delegation denies access and prevents broader ancestor grants from being consulted.
+
+The seed data includes a demonstration where a broad `payments` grant is overridden by a closer revoked delegation.
+
+### Disabled-parent rule
+
+Disabling a vendor does not mutate its descendants or their records. Instead, `isAnyAncestorDisabled()` detects disabled or suspended ancestors and the UI displays a parent-disabled banner while write controls are blocked. The existing cascade helper accepts an override flag for higher-privilege flows.
+
+## Domain Data
+
+The initial state contains:
+
+- 18 vendors: one Super, three Regional, six City, and eight Local vendors.
+- Five seeded delegations covering active, revoked, and delegated permission examples.
+- 120 vehicles distributed across Local vendors.
+- 120 drivers, initially assigned one-to-one to the seeded vehicles.
+- 360 documents: a DL, RC, and INSURANCE record for each seeded driver.
+- An initially empty audit log.
+
+The main state shape is:
+
+```text
+{
+  schemaVersion,
+  currentVendorId,
+  vendors[],
+  delegations[],
+  vehicles[],
+  drivers[],
+  documents[],
+  auditLog[]
+}
+```
+
+Document expiry is classified as `valid`, `expiring_soon` (30 days or less), or `expired`. Uploading, verifying, or rejecting documents can also flag an associated vehicle for `pending_verification` when mandatory documents are expired.
 
 ## Project Structure
 
-```
-src/
-├── components/
-│   ├── common/       # DataTable, StatusChip, SkeletonBlock, ConfirmDialog
-│   ├── driver/       # DriverForm, DriverCard, AssignVehicleDialog, DocumentList
-│   ├── document/     # DocumentSearchBar, DocumentRow
-│   ├── rbac/         # PermissionGate, RoleSwitcher
-│   ├── vehicle/      # VehicleForm, VehicleCard, DisableVehicleDialog
-│   └── vendor/       # VendorForm, VendorTree, DelegationDialog, ParentDisabledBanner
-├── data/
-│   └── seed.js       # Deterministic seed (120 vehicles, 120 drivers, 360 docs)
-├── hooks/            # usePermission, useVendorDescendants
-├── layouts/          # AppShell, Sidebar, TopBar
-├── pages/            # Dashboard, Vendors, Fleet, Drivers, Documents, Delegations, ...
-├── routes/           # Route config, ProtectedRoute, ErrorBoundary
-├── services/         # Business logic (swappable for REST)
-├── state/            # AppContext (context + reducer)
-└── utils/            # cascade, validation, constants
+```text
+moveinsync/
+├── index.html                 # Vite HTML entry point
+├── package.json               # Scripts and dependencies
+├── vite.config.js             # Vite, aliases, chunks, and Vitest setup
+├── vercel.json                # Vercel SPA rewrite
+├── netlify.toml               # Netlify build and SPA fallback
+├── public/                    # Logo and favicon assets
+├── plan/                      # Historical implementation planning notes
+└── src/
+    ├── App.jsx                # Router, Suspense, and error boundary
+    ├── main.jsx               # React providers and application bootstrap
+    ├── components/            # Common, vendor, vehicle, driver, document, RBAC UI
+    ├── data/seed.js           # Deterministic initial state generator
+    ├── hooks/                 # Permission and hierarchy hooks
+    ├── layouts/               # AppShell and TopBar
+    ├── pages/                 # Route-level screens
+    ├── routes/                # Route definitions and guards
+    ├── services/              # Local domain logic, reporting, RBAC, and storage
+    ├── state/                 # Context and reducer
+    ├── theme/                 # Material UI theme
+    └── utils/                 # Validation, constants, and hierarchy helpers
 ```
 
----
+## Getting Started
+
+### Requirements
+
+- Node.js 18 or newer
+- npm 9 or newer
+
+### Install
+
+```bash
+git clone https://github.com/jhanvi-11/moveinsync.git
+cd moveinsync
+npm install
+```
+
+### Run locally
+
+```bash
+npm run dev
+```
+
+Vite serves the application at `http://localhost:5173` by default.
+
+### Reset demo data
+
+The app persists state in the browser. To return to the deterministic seed, remove the `mis:vendor-mgmt:v1` entry from browser storage for the site, then reload the application.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Create the production bundle in `dist/` |
+| `npm run preview` | Preview the built bundle locally |
+| `npm run test` | Run Vitest once |
+| `npm run lint` | Run OxLint |
+
+## Testing
+
+Tests are colocated with the implementation and cover service logic, hierarchy behavior, route protection, common components, and selected page workflows. Vitest uses a JSDOM environment and loads `src/setupTests.js` for Testing Library matchers.
+
+Run the suite with:
+
+```bash
+npm run test
+```
+
+For a production-like check, run:
+
+```bash
+npm run lint
+npm run build
+```
+
+## Deployment
+
+### Vercel
+
+The repository includes `vercel.json` with a catch-all rewrite to `/index.html`, which keeps BrowserRouter routes working after a direct navigation. Deploy the Vite output using the repository's build command:
+
+```bash
+npm run build
+```
+
+The configured Vercel demo URL referenced by the project is [moveinsync.vercel.app](https://moveinsync.vercel.app).
+
+### Netlify
+
+`netlify.toml` publishes `dist/`, runs `npm run build`, and applies the same SPA fallback rewrite.
+
+## Security Considerations
+
+- This is a client-only demo. RBAC, route protection, and data are all observable and mutable in the browser.
+- The mock login is not identity verification and must not be used as production authentication.
+- `localStorage` is not an appropriate store for sensitive personal, driver, or compliance data in production.
+- There is no server-side authorization, tenant isolation, API validation, database access control, secret management, or audit-log tamper protection.
+- A production implementation should move authorization and persistence to a trusted backend, authenticate users with an identity provider, validate every request server-side, and protect sensitive documents and personal data.
+
+## Current Limitations
+
+- Reports and Settings are placeholder pages in the current implementation.
+- There is no backend API or database; the service layer is intentionally local and is not a network abstraction.
+- The delegation `scope` value is stored, but the current RBAC resolver does not apply scope variants separately.
+- The document center's seeded-record filter expects `vendorId`, while seeded documents are associated through `uploadedByVendorId` and their driver relationship; this area may require alignment before production use.
+- Vendor creation currently dispatches `ADD_VENDOR`, while the reducer defines `CREATE_VENDOR`; the create flow should be reconciled before relying on it.
+- The current repository snapshot has a build-time import mismatch: `DriversPage.jsx` imports a default `useVendorDescendants` export while the hook currently exposes a named export.
+- The application has no environment variables or secrets. No `.env` file is required for the current demo.
 
 ## License
 
