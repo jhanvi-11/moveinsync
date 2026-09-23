@@ -85,3 +85,27 @@ export const validateDriver = (driver, existingDrivers) => {
 
   return Object.keys(errors).length ? errors : null;
 };
+
+export const validateDocument = (doc, existingDocs) => {
+  const errors = {};
+  
+  if (!doc.type) {
+    errors.type = 'Document type is required';
+  }
+
+  if (!doc.number || doc.number.trim() === '') {
+    errors.number = 'Document number is required';
+  } else if (doc.type === 'DL' && !/^[A-Z]{2}\d{13}$/.test(doc.number)) {
+    errors.number = 'Invalid DL format (e.g. KA0120230000000)';
+  }
+
+  if (doc.type !== 'RC' && !doc.expiryDate) {
+    errors.expiryDate = 'Expiry date is required for this document type';
+  }
+
+  if (doc.issuedDate && doc.expiryDate && new Date(doc.expiryDate) <= new Date(doc.issuedDate)) {
+    errors.expiryDate = 'Expiry date must be after issued date';
+  }
+
+  return Object.keys(errors).length ? errors : null;
+};
