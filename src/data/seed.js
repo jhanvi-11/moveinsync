@@ -42,9 +42,19 @@ export function getSeedState() {
       fromVendorId: superVendor.id,
       toVendorId: regionalVendors[0].id,
       permissions: { payments: true },
-      status: 'revoked',
+      status: 'active',
       grantedAt: iso(-10 * dayMs),
-      revokedAt: iso(-2 * dayMs)
+      notes: "Broad grant at super"
+    },
+    {
+      id: uuid(),
+      fromVendorId: regionalVendors[0].id,
+      toVendorId: cityVendors[0].id,
+      permissions: { payments: true },
+      status: 'revoked',
+      grantedAt: iso(-4 * dayMs),
+      revokedAt: iso(-1 * dayMs),
+      notes: "Narrow revocation at regional beats broad grant"
     },
     {
       id: uuid(),
