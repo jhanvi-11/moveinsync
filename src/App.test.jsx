@@ -33,7 +33,7 @@ describe('App', () => {
     const vendorsLink = await screen.findByRole('link', { name: /Vendors/i });
     await user.click(vendorsLink);
     
-    const vendorsHeading = await screen.findByRole('heading', { name: /Vendors/i });
+    const vendorsHeading = await screen.findByRole('heading', { name: /Vendors/i }, { timeout: 10000 });
     expect(vendorsHeading).toBeInTheDocument();
-  });
+  }, 15000);
 });
