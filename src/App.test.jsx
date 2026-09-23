@@ -4,15 +4,18 @@ import React from 'react';
 import App from './App';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
+import { AppProvider } from './state/AppContext';
 
 describe('App', () => {
-  it('renders branded hero for visual verification', () => {
+  it('renders branded hero for visual verification', async () => {
     render(
       <ThemeProvider theme={theme}>
-        <App />
+        <AppProvider>
+          <App />
+        </AppProvider>
       </ThemeProvider>
     );
-    const heading = screen.getByRole('heading', { name: /MoveInSync Vendor Hub/i });
+    const heading = await screen.findByRole('heading', { name: /MoveInSync Vendor Hub/i });
     expect(heading).toBeInTheDocument();
     
     // Verify primary color token matches rgb(13,148,136)

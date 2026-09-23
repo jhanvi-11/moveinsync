@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { useApp } from './state/AppContext';
 
 function App() {
+  const { state } = useApp();
+  
+  useEffect(() => {
+    console.log('Seed State Loaded:', state);
+  }, [state]);
   return (
     <Box
       sx={{

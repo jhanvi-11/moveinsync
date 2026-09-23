@@ -1,0 +1,9 @@
+feat(data): storage layer, seed data, RBAC service with conflict rule, audit log
+
+- Async, versioned, debounced LocalStorage wrapper with cross-tab sync
+- Seed: 1 super + 3 regional + 6 city + 8 local + deterministic 120 vehicles + 120 drivers + ~360 documents + 4 delegations
+- AppContext + reducer for full CRUD + auth switch
+- RBAC service: baseline + delegation merge with conflict-resolution rule
+  (most specific wins; revocations always override grants)
+- Audit log middleware: logAction() called from every mutation, FIFO cap 200
+- Tests: storage round-trip, RBAC scenarios (incl. conflict rule), getDocumentStatus, audit log
