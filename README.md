@@ -2,7 +2,6 @@
 
 > Multi-tier vendor management platform with hierarchical RBAC, delegation controls, fleet & driver onboarding, and document compliance tracking.
 
-🔗 **Live Demo:** [https://moveinsync.vercel.app](https://moveinsync.vercel.app) <!-- replace with actual Vercel URL after deploy -->
 
 ---
 
